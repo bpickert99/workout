@@ -18,6 +18,9 @@
     --accent-text: #ffffff;
     --rest: #b5651d;
     --border: #e2ddd2;
+    --figure-far: #9cc5b8;
+    --prop: #c9c1b3;
+    --prop-wall: #eeeae2;
   }
   @media (prefers-color-scheme: dark) {
     :root {
@@ -29,6 +32,9 @@
       --accent-text: #0f1513;
       --rest: #e5a15a;
       --border: #2f3834;
+      --figure-far: #356b5c;
+      --prop: #57625d;
+      --prop-wall: #232b28;
     }
   }
   * { box-sizing: border-box; }
@@ -87,6 +93,9 @@
 
   ol.plan { list-style: none; padding: 0; margin: 0; }
   ol.plan li {
+    display: flex;
+    gap: 12px;
+    align-items: center;
     background: var(--card);
     border: 1px solid var(--border);
     border-radius: 14px;
@@ -96,6 +105,16 @@
   ol.plan .name { font-weight: 700; }
   ol.plan .num { color: var(--muted); margin-right: 6px; }
   ol.plan .how { color: var(--muted); font-size: 0.95rem; margin-top: 4px; }
+  ol.plan .figure { width: 96px; height: 96px; flex: none; }
+
+  .figure .limb, .figure .body { fill: none; stroke: var(--accent); stroke-linecap: round; stroke-linejoin: round; stroke-width: 8; }
+  .figure .body { stroke-width: 13; }
+  .figure .limb.far { stroke: var(--figure-far); }
+  .figure .head { fill: var(--accent); }
+  .figure .contact { fill: var(--rest); stroke: var(--card); stroke-width: 2; }
+  .figure .prop { fill: none; stroke: var(--prop); stroke-width: 4; stroke-linecap: round; }
+  .figure .prop-fill { fill: var(--prop); }
+  .figure .prop-wall { fill: var(--prop-wall); }
 
   .notice {
     border-left: 5px solid var(--rest);
@@ -117,7 +136,10 @@
   .phase.rest { color: var(--rest); }
   .progress { color: var(--muted); font-size: 1rem; margin-top: 4px; }
   #ex-name { font-size: 2rem; margin: 12px 0 8px; }
-  .ring { width: 220px; height: 220px; margin: 12px auto; position: relative; }
+  .stage { display: flex; align-items: center; justify-content: center; gap: 8px; margin: 8px 0; }
+  #ex-figure { flex: 1; max-width: 260px; }
+  #ex-figure .figure { display: block; width: 100%; height: auto; background: var(--card); border: 1px solid var(--border); border-radius: 16px; }
+  .ring { width: 130px; height: 130px; flex: none; position: relative; }
   .ring svg { width: 100%; height: 100%; transform: rotate(-90deg); }
   .ring circle { fill: none; stroke-width: 14; }
   .ring .track { stroke: var(--border); }
@@ -126,7 +148,7 @@
   .ring .count {
     position: absolute; inset: 0;
     display: flex; align-items: center; justify-content: center;
-    font-size: 4.5rem; font-weight: 800;
+    font-size: 3rem; font-weight: 800;
     font-variant-numeric: tabular-nums;
   }
   #ex-how { font-size: 1.15rem; text-align: left; margin: 12px 0; }
@@ -166,12 +188,15 @@
     <div class="phase" id="phase"></div>
     <div class="progress" id="progress"></div>
     <h1 id="ex-name"></h1>
-    <div class="ring" id="ring">
-      <svg viewBox="0 0 120 120" aria-hidden="true">
-        <circle class="track" cx="60" cy="60" r="52"></circle>
-        <circle class="bar" id="bar" cx="60" cy="60" r="52"></circle>
-      </svg>
-      <div class="count" id="count"></div>
+    <div class="stage">
+      <div id="ex-figure"></div>
+      <div class="ring" id="ring">
+        <svg viewBox="0 0 120 120" aria-hidden="true">
+          <circle class="track" cx="60" cy="60" r="52"></circle>
+          <circle class="bar" id="bar" cx="60" cy="60" r="52"></circle>
+        </svg>
+        <div class="count" id="count"></div>
+      </div>
     </div>
     <p id="ex-how"></p>
     <p id="ex-easier" class="muted"></p>
@@ -192,6 +217,7 @@
 
 </main>
 
+<script src="figures.js"></script>
 <script>
 // Based on the 12-exercise "7-minute workout" (Klika & Jordan, ACSM Health & Fitness Journal, 2013).
 // Each exercise that loads the hands/wrists or requires the floor is swapped for a
@@ -343,11 +369,41 @@ function renderStatus() {
 }
 
 function renderPlan() {
-  document.getElementById("plan").innerHTML = EXERCISES.map((ex, i) => `
+  const plan = document.getElementById("plan");
+  plan.innerHTML = EXERCISES.map((ex, i) => `
     <li>
-      <div><span class="num">${i + 1}.</span><span class="name">${ex.name}</span></div>
-      <div class="how">${ex.how}</div>
+      <div>
+        <div><span class="num">${i + 1}.</span><span class="name">${ex.name}</span></div>
+        <div class="how">${ex.how}</div>
+      </div>
     </li>`).join("");
+  EXERCISES.forEach((ex, i) => {
+    const figure = createFigure(ex.name);
+    plan.children[i].prepend(figure.svg);
+    planFigures.push(figure);
+  });
+}
+
+// ---------- Figure animation ----------
+
+const planFigures = [];
+let workoutFigure = null;
+// Set from the first animation frame after the figure appears, so it shares the frame clock.
+let workoutFigureStart = null;
+
+function showWorkoutFigure(name) {
+  workoutFigure = createFigure(name);
+  workoutFigureStart = null;
+  document.getElementById("ex-figure").replaceChildren(workoutFigure.svg);
+}
+
+function animateFigures(now) {
+  planFigures.forEach(figure => figure.update(now / 1000));
+  if (workoutFigure) {
+    if (workoutFigureStart === null) workoutFigureStart = now;
+    workoutFigure.update((now - workoutFigureStart) / 1000);
+  }
+  requestAnimationFrame(animateFigures);
 }
 
 // ---------- Sound & voice ----------
@@ -428,6 +484,7 @@ function enterStep() {
   document.getElementById("ring").classList.toggle("rest", isRest);
   document.getElementById("progress").textContent = `Exercise ${(isRest ? step.next : step.index) + 1} of ${EXERCISES.length}`;
   document.getElementById("ex-name").textContent = ex.name;
+  showWorkoutFigure(ex.name);
   document.getElementById("ex-how").textContent = ex.how;
   document.getElementById("ex-easier").textContent = `Easier: ${ex.easier}`;
   document.getElementById("ex-harder").textContent = `Harder: ${ex.harder}`;
@@ -516,6 +573,7 @@ document.getElementById("home-btn").addEventListener("click", () => { renderStat
 
 renderPlan();
 renderStatus();
+requestAnimationFrame(animateFigures);
 </script>
 </body>
 </html>
