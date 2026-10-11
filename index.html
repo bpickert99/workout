@@ -130,7 +130,7 @@
     font-variant-numeric: tabular-nums;
   }
   #ex-how { font-size: 1.15rem; text-align: left; margin: 12px 0; }
-  #ex-easier { font-size: 1rem; text-align: left; }
+  #ex-easier, #ex-harder { font-size: 1rem; text-align: left; }
   .controls { display: flex; gap: 12px; margin-top: 24px; }
 
   #done { text-align: center; }
@@ -142,7 +142,7 @@
 
   <section id="home">
     <h1>Daily 7 Minutes</h1>
-    <p class="muted">A gentle, wrist-friendly workout. Everything is done standing or in a chair — no weight on your hands or wrists, and no getting down on the floor.</p>
+    <p class="muted">A gentle, wrist-friendly workout. Everything is done standing or in a chair — no weight on your hands or wrists (where you use the wall, only your elbows touch it), and no getting down on the floor.</p>
 
     <div class="status" id="status"></div>
 
@@ -152,7 +152,8 @@
     <p>A sturdy chair without wheels, a clear spot of wall, and the bottom step of a staircase (or any low, stable step).</p>
 
     <h2>Today's 12 exercises</h2>
-    <p class="muted">30 seconds each, with 10 seconds to rest in between. Go at your own pace — slow and steady is perfect.</p>
+    <p class="muted">30 seconds each, with 10 seconds to rest in between. Strength moves are done slowly — about 3 seconds up and 3 seconds down. Moving slowly is what builds muscle.</p>
+    <p class="muted">When a move starts to feel easy, try its "Harder" version. Making things a little harder over time is how muscle keeps growing.</p>
     <ol class="plan" id="plan"></ol>
 
     <h2>Please remember</h2>
@@ -174,6 +175,7 @@
     </div>
     <p id="ex-how"></p>
     <p id="ex-easier" class="muted"></p>
+    <p id="ex-harder" class="muted"></p>
     <div class="controls">
       <button class="secondary" id="pause-btn">Pause</button>
       <button class="secondary" id="stop-btn">End workout</button>
@@ -193,79 +195,94 @@
 <script>
 // Based on the 12-exercise "7-minute workout" (Klika & Jordan, ACSM Health & Fitness Journal, 2013).
 // Each exercise that loads the hands/wrists or requires the floor is swapped for a
-// standing or chair-based move that trains the same area.
+// standing or chair-based move that trains the same area. No exercise puts any weight
+// through the hands or wrists; where a wall is used, only the elbows touch it.
+// Strength moves use a slow tempo (about 3 seconds up, 3 seconds down), which builds
+// muscle in older adults with bodyweight alone (Watanabe et al., 2015).
 const EXERCISES = [
   {
     name: "Side-step jacks",
     replaces: "Jumping jacks",
     how: "Step one foot out to the side while raising both arms overhead, then step back in and lower your arms. Alternate sides.",
-    easier: "Raise your arms only to shoulder height."
+    easier: "Raise your arms only to shoulder height.",
+    harder: "Step out wider and bend your knees a little each time you step."
   },
   {
     name: "Mini wall sit",
     replaces: "Wall sit",
-    how: "Stand with your back flat against the wall, feet about a foot out in front. Slide down just a few inches and hold. Keep your knees behind your toes and your arms relaxed at your sides.",
-    easier: "Slide down less, or stand up straight to rest whenever you need to."
+    how: "Stand with your back flat against the wall, feet about a foot out in front. Slide down a few inches and hold. Keep your knees behind your toes and your arms relaxed at your sides.",
+    easier: "Slide down less, or stand up straight to rest whenever you need to.",
+    harder: "Slide down a little lower each week, never past a comfortable knee bend."
   },
   {
-    name: "Forearm wall push-ups",
+    name: "Elbow wall push-ups",
     replaces: "Push-ups",
-    how: "Stand facing the wall and place your forearms flat on it at shoulder height, hands relaxed in loose fists. Step your feet back a little, then bend your elbows to bring your chest toward the wall and push back out. Your wrists stay straight — the work goes through your forearms.",
-    easier: "Stand closer to the wall."
+    how: "Stand facing the wall. Put just your elbows on the wall at shoulder height, with your forearms pointing up and your hands off the wall and relaxed. Step your feet back. Slowly lean your chest toward the wall for 3 seconds, then push back out through your elbows for 3 seconds. Your hands and wrists never touch the wall.",
+    easier: "Stand closer to the wall.",
+    harder: "Step your feet farther back from the wall."
   },
   {
     name: "Seated knee lifts",
     replaces: "Crunches",
-    how: "Sit tall near the front of the chair with your arms crossed over your chest. Tighten your stomach and lift one knee toward your chest, lower it, then lift the other.",
-    easier: "Lean back against the chair while you lift."
+    how: "Sit tall near the front of the chair with your arms crossed over your chest. Tighten your stomach and slowly lift one knee toward your chest, hold for a moment, and lower it slowly. Alternate legs.",
+    easier: "Lean back against the chair while you lift.",
+    harder: "Lift both knees together."
   },
   {
-    name: "Low step-ups",
+    name: "Slow step-ups",
     replaces: "Step-ups",
-    how: "Step up onto the bottom stair with one foot, bring the other up, then step back down the same way. Switch the leading foot every few steps.",
-    easier: "Lightly touch the wall or rail for balance — don't lean your weight on your hand."
+    how: "Step up onto the bottom stair with one foot and slowly press up to standing over about 3 seconds, then lower yourself back down just as slowly. Switch the leading foot every few steps.",
+    easier: "Lightly touch the wall for balance with your elbow or shoulder — don't lean on your hand.",
+    harder: "Use the second step, or do all your steps on one leg before switching."
   },
   {
-    name: "Chair sit-to-stands",
+    name: "Slow chair sit-to-stands",
     replaces: "Squats",
-    how: "Sit near the front of the chair, feet flat and hip-width apart, arms crossed over your chest. Lean forward slightly and stand up using your legs, then sit back down slowly and with control.",
-    easier: "Use a higher seat, or just hover above the chair instead of sitting all the way down."
+    how: "Sit near the front of the chair, feet flat and hip-width apart, arms crossed over your chest. Lean forward and stand up over 3 seconds using only your legs, then take 3 seconds to sit back down.",
+    easier: "Use a higher seat, or a cushion on the chair.",
+    harder: "Use a lower chair, or hover just above the seat for a second before standing back up."
   },
   {
     name: "Wall angels",
     replaces: "Triceps dips",
     how: "Stand with your back against the wall, elbows bent like a goalpost. Slowly slide your arms up the wall as far as is comfortable, then back down, squeezing your shoulder blades together.",
-    easier: "Step your feet a little away from the wall, or do it without the wall."
+    easier: "Step your feet a little away from the wall, or do it without the wall.",
+    harder: "Move even more slowly and pause for a second at the top and bottom."
   },
   {
-    name: "Forearm wall plank",
+    name: "Elbow wall plank",
     replaces: "Plank",
-    how: "Place your forearms flat on the wall at shoulder height and walk your feet back until your body is in a straight, slight lean. Tighten your stomach and hold. Wrists stay straight and relaxed.",
-    easier: "Walk your feet closer to the wall."
+    how: "Put just your elbows on the wall at shoulder height, forearms pointing up and hands off the wall. Walk your feet back until your body is in a straight, slight lean. Tighten your stomach and hold. Your hands and wrists never touch the wall.",
+    easier: "Walk your feet closer to the wall.",
+    harder: "Walk your feet farther back from the wall."
   },
   {
     name: "High-knee march",
     replaces: "High knees running",
     how: "March in place, lifting your knees as high as is comfortable and swinging your arms naturally.",
-    easier: "March at a slower pace with lower knees."
+    easier: "March at a slower pace with lower knees.",
+    harder: "March faster and lift your knees to hip height."
   },
   {
-    name: "Reverse step-backs",
+    name: "Slow reverse step-backs",
     replaces: "Lunges",
-    how: "Stand tall, then step one foot back and bend both knees a little. Push through your front heel to step back to standing. Alternate legs.",
-    easier: "Take a smaller step and keep your knees nearly straight. Lightly touch a chair back for balance if needed."
+    how: "Stand tall, then step one foot back and slowly bend both knees over 3 seconds. Push through your front heel to come back to standing. Alternate legs.",
+    easier: "Take a smaller step and keep your knees nearly straight.",
+    harder: "Take a longer step back and bend your knees deeper."
   },
   {
-    name: "Standing trunk twists",
+    name: "Slow calf raises",
     replaces: "Push-up with rotation",
-    how: "Stand with feet hip-width apart and arms crossed over your chest. Slowly turn your upper body to one side, back to center, then to the other side. Keep your hips facing forward.",
-    easier: "Do the same twist sitting in the chair."
+    how: "Stand tall behind the chair. Rise up onto your toes over 3 seconds, hold for a moment, then lower your heels over 3 seconds.",
+    easier: "Lean your forearm lightly on the chair back for balance, without putting weight on your hand.",
+    harder: "Do them on one foot at a time."
   },
   {
     name: "Standing side leg raises",
     replaces: "Side plank",
-    how: "Stand beside the chair and lightly rest one hand on its back. Keeping your toes pointing forward, lift the outside leg out to the side and lower it slowly.",
-    easier: "Make the lift smaller.",
+    how: "Stand beside the chair. Keeping your toes pointing forward, slowly lift the outside leg out to the side and slowly lower it.",
+    easier: "Make the lift smaller, and lean your forearm lightly on the chair back for balance.",
+    harder: "Hold the leg up for 2 seconds at the top of each lift.",
     switchSides: true
   }
 ];
@@ -413,6 +430,7 @@ function enterStep() {
   document.getElementById("ex-name").textContent = ex.name;
   document.getElementById("ex-how").textContent = ex.how;
   document.getElementById("ex-easier").textContent = `Easier: ${ex.easier}`;
+  document.getElementById("ex-harder").textContent = `Harder: ${ex.harder}`;
   renderCount();
 
   if (isRest) {
