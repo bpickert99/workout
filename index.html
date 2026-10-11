@@ -1,0 +1,503 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="7 Minutes">
+<meta name="theme-color" content="#2f6f5e">
+<title>Daily 7 Minutes</title>
+<style>
+  :root {
+    --bg: #f7f4ee;
+    --card: #ffffff;
+    --text: #1f2a26;
+    --muted: #5d6b65;
+    --accent: #2f6f5e;
+    --accent-text: #ffffff;
+    --rest: #b5651d;
+    --border: #e2ddd2;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #151a18;
+      --card: #1f2623;
+      --text: #f1efe9;
+      --muted: #a7b3ad;
+      --accent: #5fb39a;
+      --accent-text: #0f1513;
+      --rest: #e5a15a;
+      --border: #2f3834;
+    }
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    font-size: 20px;
+    line-height: 1.45;
+  }
+  main {
+    max-width: 640px;
+    margin: 0 auto;
+    padding: 24px 16px calc(32px + env(safe-area-inset-bottom));
+  }
+  h1 { font-size: 1.8rem; margin: 0 0 4px; }
+  h2 { font-size: 1.3rem; margin: 28px 0 12px; }
+  p { margin: 0 0 12px; }
+  .muted { color: var(--muted); }
+  .hidden { display: none !important; }
+
+  .status {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 18px;
+    margin: 20px 0;
+  }
+  .status strong { font-size: 1.2rem; }
+
+  button {
+    font: inherit;
+    border: 0;
+    border-radius: 14px;
+    cursor: pointer;
+  }
+  .primary {
+    display: block;
+    width: 100%;
+    background: var(--accent);
+    color: var(--accent-text);
+    font-size: 1.4rem;
+    font-weight: 700;
+    padding: 22px;
+  }
+  .secondary {
+    background: var(--card);
+    color: var(--text);
+    border: 2px solid var(--border);
+    font-size: 1.1rem;
+    font-weight: 600;
+    padding: 16px;
+    flex: 1;
+  }
+
+  ol.plan { list-style: none; padding: 0; margin: 0; }
+  ol.plan li {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 14px 16px;
+    margin-bottom: 10px;
+  }
+  ol.plan .name { font-weight: 700; }
+  ol.plan .num { color: var(--muted); margin-right: 6px; }
+  ol.plan .how { color: var(--muted); font-size: 0.95rem; margin-top: 4px; }
+
+  .notice {
+    border-left: 5px solid var(--rest);
+    background: var(--card);
+    padding: 14px 16px;
+    border-radius: 8px;
+    font-size: 0.95rem;
+  }
+
+  /* Workout screen */
+  #workout { text-align: center; }
+  .phase {
+    font-size: 1.1rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--accent);
+  }
+  .phase.rest { color: var(--rest); }
+  .progress { color: var(--muted); font-size: 1rem; margin-top: 4px; }
+  #ex-name { font-size: 2rem; margin: 12px 0 8px; }
+  .ring { width: 220px; height: 220px; margin: 12px auto; position: relative; }
+  .ring svg { width: 100%; height: 100%; transform: rotate(-90deg); }
+  .ring circle { fill: none; stroke-width: 14; }
+  .ring .track { stroke: var(--border); }
+  .ring .bar { stroke: var(--accent); stroke-linecap: round; transition: stroke-dashoffset 0.25s linear; }
+  .ring.rest .bar { stroke: var(--rest); }
+  .ring .count {
+    position: absolute; inset: 0;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 4.5rem; font-weight: 800;
+    font-variant-numeric: tabular-nums;
+  }
+  #ex-how { font-size: 1.15rem; text-align: left; margin: 12px 0; }
+  #ex-easier { font-size: 1rem; text-align: left; }
+  .controls { display: flex; gap: 12px; margin-top: 24px; }
+
+  #done { text-align: center; }
+  #done .big { font-size: 4rem; margin: 24px 0 8px; }
+</style>
+</head>
+<body>
+<main>
+
+  <section id="home">
+    <h1>Daily 7 Minutes</h1>
+    <p class="muted">A gentle, wrist-friendly workout. Everything is done standing or in a chair — no weight on your hands or wrists, and no getting down on the floor.</p>
+
+    <div class="status" id="status"></div>
+
+    <button class="primary" id="start-btn">Start today's workout</button>
+
+    <h2>What you'll need</h2>
+    <p>A sturdy chair without wheels, a clear spot of wall, and the bottom step of a staircase (or any low, stable step).</p>
+
+    <h2>Today's 12 exercises</h2>
+    <p class="muted">30 seconds each, with 10 seconds to rest in between. Go at your own pace — slow and steady is perfect.</p>
+    <ol class="plan" id="plan"></ol>
+
+    <h2>Please remember</h2>
+    <div class="notice">
+      Move slowly and stay within a comfortable range. Mild effort is good; sharp pain is not — stop that exercise and rest until the next one. Breathe normally and don't hold your breath. Check with your doctor before starting a new exercise routine.
+    </div>
+  </section>
+
+  <section id="workout" class="hidden">
+    <div class="phase" id="phase"></div>
+    <div class="progress" id="progress"></div>
+    <h1 id="ex-name"></h1>
+    <div class="ring" id="ring">
+      <svg viewBox="0 0 120 120" aria-hidden="true">
+        <circle class="track" cx="60" cy="60" r="52"></circle>
+        <circle class="bar" id="bar" cx="60" cy="60" r="52"></circle>
+      </svg>
+      <div class="count" id="count"></div>
+    </div>
+    <p id="ex-how"></p>
+    <p id="ex-easier" class="muted"></p>
+    <div class="controls">
+      <button class="secondary" id="pause-btn">Pause</button>
+      <button class="secondary" id="stop-btn">End workout</button>
+    </div>
+  </section>
+
+  <section id="done" class="hidden">
+    <div class="big">🎉</div>
+    <h1>Well done!</h1>
+    <p id="done-msg"></p>
+    <p class="muted">Have a glass of water and take a moment to stretch gently.</p>
+    <button class="primary" id="home-btn">Back to start</button>
+  </section>
+
+</main>
+
+<script>
+// Based on the 12-exercise "7-minute workout" (Klika & Jordan, ACSM Health & Fitness Journal, 2013).
+// Each exercise that loads the hands/wrists or requires the floor is swapped for a
+// standing or chair-based move that trains the same area.
+const EXERCISES = [
+  {
+    name: "Side-step jacks",
+    replaces: "Jumping jacks",
+    how: "Step one foot out to the side while raising both arms overhead, then step back in and lower your arms. Alternate sides.",
+    easier: "Raise your arms only to shoulder height."
+  },
+  {
+    name: "Mini wall sit",
+    replaces: "Wall sit",
+    how: "Stand with your back flat against the wall, feet about a foot out in front. Slide down just a few inches and hold. Keep your knees behind your toes and your arms relaxed at your sides.",
+    easier: "Slide down less, or stand up straight to rest whenever you need to."
+  },
+  {
+    name: "Forearm wall push-ups",
+    replaces: "Push-ups",
+    how: "Stand facing the wall and place your forearms flat on it at shoulder height, hands relaxed in loose fists. Step your feet back a little, then bend your elbows to bring your chest toward the wall and push back out. Your wrists stay straight — the work goes through your forearms.",
+    easier: "Stand closer to the wall."
+  },
+  {
+    name: "Seated knee lifts",
+    replaces: "Crunches",
+    how: "Sit tall near the front of the chair with your arms crossed over your chest. Tighten your stomach and lift one knee toward your chest, lower it, then lift the other.",
+    easier: "Lean back against the chair while you lift."
+  },
+  {
+    name: "Low step-ups",
+    replaces: "Step-ups",
+    how: "Step up onto the bottom stair with one foot, bring the other up, then step back down the same way. Switch the leading foot every few steps.",
+    easier: "Lightly touch the wall or rail for balance — don't lean your weight on your hand."
+  },
+  {
+    name: "Chair sit-to-stands",
+    replaces: "Squats",
+    how: "Sit near the front of the chair, feet flat and hip-width apart, arms crossed over your chest. Lean forward slightly and stand up using your legs, then sit back down slowly and with control.",
+    easier: "Use a higher seat, or just hover above the chair instead of sitting all the way down."
+  },
+  {
+    name: "Wall angels",
+    replaces: "Triceps dips",
+    how: "Stand with your back against the wall, elbows bent like a goalpost. Slowly slide your arms up the wall as far as is comfortable, then back down, squeezing your shoulder blades together.",
+    easier: "Step your feet a little away from the wall, or do it without the wall."
+  },
+  {
+    name: "Forearm wall plank",
+    replaces: "Plank",
+    how: "Place your forearms flat on the wall at shoulder height and walk your feet back until your body is in a straight, slight lean. Tighten your stomach and hold. Wrists stay straight and relaxed.",
+    easier: "Walk your feet closer to the wall."
+  },
+  {
+    name: "High-knee march",
+    replaces: "High knees running",
+    how: "March in place, lifting your knees as high as is comfortable and swinging your arms naturally.",
+    easier: "March at a slower pace with lower knees."
+  },
+  {
+    name: "Reverse step-backs",
+    replaces: "Lunges",
+    how: "Stand tall, then step one foot back and bend both knees a little. Push through your front heel to step back to standing. Alternate legs.",
+    easier: "Take a smaller step and keep your knees nearly straight. Lightly touch a chair back for balance if needed."
+  },
+  {
+    name: "Standing trunk twists",
+    replaces: "Push-up with rotation",
+    how: "Stand with feet hip-width apart and arms crossed over your chest. Slowly turn your upper body to one side, back to center, then to the other side. Keep your hips facing forward.",
+    easier: "Do the same twist sitting in the chair."
+  },
+  {
+    name: "Standing side leg raises",
+    replaces: "Side plank",
+    how: "Stand beside the chair and lightly rest one hand on its back. Keeping your toes pointing forward, lift the outside leg out to the side and lower it slowly.",
+    easier: "Make the lift smaller.",
+    switchSides: true
+  }
+];
+
+const WORK_SECONDS = 30;
+const REST_SECONDS = 10;
+const STORAGE_KEY = "daily7.completedDates";
+
+// ---------- Completed-day history ----------
+
+function dateKey(d) {
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  return `${y}-${m}-${day}`;
+}
+
+function loadHistory() {
+  try {
+    return JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]");
+  } catch (e) {
+    return [];
+  }
+}
+
+function markTodayDone() {
+  const dates = new Set(loadHistory());
+  dates.add(dateKey(new Date()));
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify([...dates]));
+  } catch (e) {
+    // Storage unavailable (e.g. private browsing): the workout still counts, it just isn't remembered.
+  }
+}
+
+function currentStreak() {
+  const dates = new Set(loadHistory());
+  const day = new Date();
+  if (!dates.has(dateKey(day))) day.setDate(day.getDate() - 1);
+  let streak = 0;
+  while (dates.has(dateKey(day))) {
+    streak++;
+    day.setDate(day.getDate() - 1);
+  }
+  return streak;
+}
+
+function renderStatus() {
+  const doneToday = loadHistory().includes(dateKey(new Date()));
+  const streak = currentStreak();
+  const streakText = streak === 1 ? "1 day in a row" : `${streak} days in a row`;
+  document.getElementById("status").innerHTML = doneToday
+    ? `<strong>✅ Done for today!</strong><br><span class="muted">${streakText}. See you tomorrow.</span>`
+    : streak > 0
+      ? `<strong>Ready for today?</strong><br><span class="muted">You're on a streak: ${streakText}.</span>`
+      : `<strong>Ready for today?</strong><br><span class="muted">About 8 minutes, start to finish.</span>`;
+  document.getElementById("start-btn").textContent = doneToday ? "Do it again" : "Start today's workout";
+}
+
+function renderPlan() {
+  document.getElementById("plan").innerHTML = EXERCISES.map((ex, i) => `
+    <li>
+      <div><span class="num">${i + 1}.</span><span class="name">${ex.name}</span></div>
+      <div class="how">${ex.how}</div>
+    </li>`).join("");
+}
+
+// ---------- Sound & voice ----------
+
+let audioCtx = null;
+
+function beep(freq, ms) {
+  const osc = audioCtx.createOscillator();
+  const gain = audioCtx.createGain();
+  osc.frequency.value = freq;
+  gain.gain.setValueAtTime(0.2, audioCtx.currentTime);
+  gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + ms / 1000);
+  osc.connect(gain).connect(audioCtx.destination);
+  osc.start();
+  osc.stop(audioCtx.currentTime + ms / 1000);
+}
+
+function say(text) {
+  speechSynthesis.cancel();
+  const u = new SpeechSynthesisUtterance(text);
+  u.rate = 0.95;
+  speechSynthesis.speak(u);
+}
+
+// ---------- Workout timer ----------
+
+const RING_LENGTH = 2 * Math.PI * 52;
+const bar = document.getElementById("bar");
+bar.style.strokeDasharray = RING_LENGTH;
+
+// A workout is a list of steps: a "get ready" rest, then work/rest alternating.
+function buildSteps() {
+  const steps = [{ type: "rest", seconds: REST_SECONDS, next: 0 }];
+  EXERCISES.forEach((_, i) => {
+    steps.push({ type: "work", seconds: WORK_SECONDS, index: i });
+    if (i < EXERCISES.length - 1) steps.push({ type: "rest", seconds: REST_SECONDS, next: i + 1 });
+  });
+  return steps;
+}
+
+let steps = [];
+let stepIndex = 0;
+let remaining = 0;
+let paused = false;
+let ticker = null;
+let wakeLock = null;
+
+function show(id) {
+  ["home", "workout", "done"].forEach(s => document.getElementById(s).classList.toggle("hidden", s !== id));
+  window.scrollTo(0, 0);
+}
+
+async function startWorkout() {
+  audioCtx = audioCtx || new AudioContext();
+  await audioCtx.resume();
+  if ("wakeLock" in navigator) {
+    try { wakeLock = await navigator.wakeLock.request("screen"); } catch (e) { wakeLock = null; }
+  }
+  steps = buildSteps();
+  stepIndex = 0;
+  paused = false;
+  document.getElementById("pause-btn").textContent = "Pause";
+  show("workout");
+  enterStep();
+  ticker = setInterval(tick, 1000);
+}
+
+function enterStep() {
+  const step = steps[stepIndex];
+  remaining = step.seconds;
+  const isRest = step.type === "rest";
+  const ex = EXERCISES[isRest ? step.next : step.index];
+
+  document.getElementById("phase").textContent = isRest
+    ? (stepIndex === 0 ? "Get ready" : "Rest — next up")
+    : "Go";
+  document.getElementById("phase").classList.toggle("rest", isRest);
+  document.getElementById("ring").classList.toggle("rest", isRest);
+  document.getElementById("progress").textContent = `Exercise ${(isRest ? step.next : step.index) + 1} of ${EXERCISES.length}`;
+  document.getElementById("ex-name").textContent = ex.name;
+  document.getElementById("ex-how").textContent = ex.how;
+  document.getElementById("ex-easier").textContent = `Easier: ${ex.easier}`;
+  renderCount();
+
+  if (isRest) {
+    say(stepIndex === 0 ? `Get ready. First up: ${ex.name}.` : `Rest. Next up: ${ex.name}.`);
+  } else {
+    beep(880, 300);
+    say(`Begin. ${ex.name}.`);
+  }
+}
+
+function renderCount() {
+  const step = steps[stepIndex];
+  document.getElementById("count").textContent = remaining;
+  bar.style.strokeDashoffset = RING_LENGTH * (1 - remaining / step.seconds);
+}
+
+function tick() {
+  if (paused) return;
+  remaining--;
+  const step = steps[stepIndex];
+
+  if (remaining <= 0) {
+    stepIndex++;
+    if (stepIndex === steps.length) {
+      finishWorkout();
+      return;
+    }
+    enterStep();
+    return;
+  }
+
+  renderCount();
+  if (remaining <= 3) beep(660, 150);
+  if (step.type === "work" && EXERCISES[step.index].switchSides && remaining === WORK_SECONDS / 2) {
+    say("Switch sides.");
+  }
+  if (step.type === "work" && remaining === 10) say("Ten seconds.");
+}
+
+function endTimer() {
+  clearInterval(ticker);
+  ticker = null;
+  speechSynthesis.cancel();
+  if (wakeLock) { wakeLock.release(); wakeLock = null; }
+}
+
+function finishWorkout() {
+  endTimer();
+  markTodayDone();
+  beep(988, 600);
+  say("All done. Great work!");
+  const streak = currentStreak();
+  document.getElementById("done-msg").textContent = streak > 1
+    ? `That's ${streak} days in a row. Keep it up!`
+    : "You finished today's workout.";
+  show("done");
+}
+
+function togglePause() {
+  paused = !paused;
+  document.getElementById("pause-btn").textContent = paused ? "Resume" : "Pause";
+  if (paused) speechSynthesis.cancel();
+}
+
+function stopWorkout() {
+  if (!confirm("End the workout early?")) return;
+  endTimer();
+  renderStatus();
+  show("home");
+}
+
+// Re-acquire the screen wake lock when returning to the tab mid-workout.
+document.addEventListener("visibilitychange", async () => {
+  if (ticker && document.visibilityState === "visible" && "wakeLock" in navigator) {
+    try { wakeLock = await navigator.wakeLock.request("screen"); } catch (e) { wakeLock = null; }
+  }
+});
+
+document.getElementById("start-btn").addEventListener("click", startWorkout);
+document.getElementById("pause-btn").addEventListener("click", togglePause);
+document.getElementById("stop-btn").addEventListener("click", stopWorkout);
+document.getElementById("home-btn").addEventListener("click", () => { renderStatus(); show("home"); });
+
+renderPlan();
+renderStatus();
+</script>
+</body>
+</html>
